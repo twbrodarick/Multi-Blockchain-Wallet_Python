@@ -2,7 +2,7 @@
  "cells": [
   {
    "cell_type": "code",
-   "execution_count": 63,
+   "execution_count": 265,
    "metadata": {},
    "outputs": [],
    "source": [
@@ -19,7 +19,7 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 64,
+   "execution_count": 266,
    "metadata": {},
    "outputs": [],
    "source": [
@@ -30,33 +30,25 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 65,
+   "execution_count": 267,
    "metadata": {},
    "outputs": [],
    "source": [
     "def derive_wallets(mnemonic, coin, numderive):\n",
-    "    cmd = f'{php} -g --mnemonic={mnem}  --numderive='+str(numderive)+' --coin='+str(coin)+' --format=json'\n",
+    "    cmd = f'{php} -g --mnemonic={mnem} --numderive='+str(numderive)+' --coin='+str(coin)+' --cols=all --format=jsonpretty'   \n",
     "    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=False)\n",
     "    (output, err) = p.communicate()\n",
-    "    p_status = p.wait()\n",
-    "    return json.loads(output)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 66,
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "coins = {'eth': derive_wallets(mnemonic=mnem, coin=ETH, numderive=3), 'btc-test': derive_wallets(mnemonic=mnem, coin=BTCTEST, numderive=3)}\n",
+    "    return json.loads(output) \n",
     "\n",
-    "eth_priv_key = coins['eth'][0]['privkey']\n",
-    "btctest_priv_key = coins['btc-test'][0]['privkey']\n"
+    "coins = {'eth':derive_wallets(mnemonic=mnem,coin=ETH,numderive=3),'btc-test': derive_wallets(mnemonic=mnem,coin=BTCTEST,numderive=3)}\n",
+    "\n",
+    "privkey_BTCTEST = coins['btc-test'][0]['privkey']\n",
+    "privkey_ETH = coins['eth'][0]['privkey']"
    ]
   },
   {
    "cell_type": "code",
-   "execution_count": 67,
+   "execution_count": 268,
    "metadata": {},
    "outputs": [
     {
@@ -138,85 +130,78 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 68,
+   "execution_count": 269,
    "metadata": {},
    "outputs": [],
    "source": [
-    "def priv_key_to_account(coin, priv_key):\n",
+    "def priv_key_to_account(coin, privkey):\n",
     "    if coin == ETH:\n",
-    "        return Account.privateKeyToAccount(priv_key)\n",
+    "        return Account.privateKeyToAccount(privkey)\n",
     "    if coin == BTCTEST:\n",
-    "        return PrivateKeyTestnet(priv_key)\n",
-    "    \n",
-    "eth_account = priv_key_to_account(ETH,eth_priv_key)\n",
-    "btc_account = priv_key_to_account(BTCTEST,btctest_priv_key)"
+    "        return PrivateKeyTestnet(privkey)\n",
+    "\n",
+    "ETH_account = priv_key_to_account(ETH, privkey_ETH)\n",
+    "BTCTEST_account = priv_key_to_account(BTCTEST, privkey_BTCTEST)\n",
+    "\n",
+    "                                                               "
    ]
   },
   {
    "cell_type": "code",
-   "execution_count": 69,
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stdout",
-     "output_type": "stream",
-     "text": [
-      "<eth_account.signers.local.LocalAccount object at 0x000001B13CF4FD88>\n",
-      "<PrivateKeyTestnet: mvUyjXK5HE6oMwqbKcBsXxFuqMyYdd3T6P>\n"
-     ]
-    }
-   ],
-   "source": [
-    "print(eth_account)\n",
-    "print(btc_account)"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 70,
+   "execution_count": 270,
    "metadata": {},
    "outputs": [],
    "source": [
     "def create_tx(coin, account, to, amount):\n",
     "    if coin == ETH:\n",
-    "        gasEstimate = w3.eth.estimateGas(\n",
-    "            {\"from\": account.address, \"to\": to, \"amount\":amount}\n",
-    "        )\n",
+    "        gasEstimate = w3.eth.estimateGas({\"from\": account.address, \"to\": to, \"amount\":amount})\n",
+    "        \n",
     "        tx = {\n",
-    "            \"from\": account.address,\n",
-    "            \"to\": to,\n",
-    "            \"value\": amount,\n",
-    "            \"gas\":  gasEstimate,\n",
-    "            \"gasPrice\": w3.eth.gasPrice,\n",
-    "            \"nonce\": w3.eth.getTransactionCount(account.address),\n",
-    "            \"chainID\": w3.net.chainID\n",
+    "        \"from\": account.address,\n",
+    "        \"to\": to,\n",
+    "        \"value\": amount,\n",
+    "        \"gas\":  gasEstimate,\n",
+    "        \"gasPrice\": w3.eth.gasPrice,\n",
+    "        \"nonce\": w3.eth.getTransactionCount(account.address),\n",
+    "        \"chainID\": w3.net.chainID\n",
     "        }\n",
     "        \n",
     "        return tx\n",
     "    \n",
     "    if coin == BTCTEST:\n",
     "        \n",
-    "        return PrivateKeyTestnet.prepare_transaction(account.address, [(to, amount, BTCTEST)])"
+    "        return PrivateKeyTestnet.prepare_transaction(account.address, [(to, amount, BTC)])"
    ]
   },
   {
    "cell_type": "code",
-   "execution_count": null,
+   "execution_count": 271,
    "metadata": {},
-   "outputs": [],
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "'{\"unspents\":[{\"amount\":1000000,\"confirmations\":-1781835,\"script\":\"76a914a42a419377dcde836d1e9a4e42e3e595cd076f9b88ac\",\"txid\":\"183d6bc256c6a77a66ed6625200ffacbf08b80aaa6b18305ff38e3027dfeefb4\",\"txindex\":0,\"type\":\"p2pkh\",\"vsize\":148,\"segwit\":false},{\"amount\":20000,\"confirmations\":-1781332,\"script\":\"76a914a42a419377dcde836d1e9a4e42e3e595cd076f9b88ac\",\"txid\":\"bec823537c455bca2435eab66940d4f6e535719f627fe48097f48feaa4d100ad\",\"txindex\":0,\"type\":\"p2pkh\",\"vsize\":148,\"segwit\":false},{\"amount\":10000,\"confirmations\":-1781332,\"script\":\"76a914a42a419377dcde836d1e9a4e42e3e595cd076f9b88ac\",\"txid\":\"3c0efd997836e1d5aeedc41f2748a9a86293742a65372065ee9082c12b859c85\",\"txindex\":0,\"type\":\"p2pkh\",\"vsize\":148,\"segwit\":false},{\"amount\":10000,\"confirmations\":-1781332,\"script\":\"76a914a42a419377dcde836d1e9a4e42e3e595cd076f9b88ac\",\"txid\":\"047e0f7e96e2e4c65be4a3c30dd05279487e52c2e147bb8c275b34c32469f717\",\"txindex\":0,\"type\":\"p2pkh\",\"vsize\":148,\"segwit\":false},{\"amount\":1000,\"confirmations\":-1781076,\"script\":\"76a914a42a419377dcde836d1e9a4e42e3e595cd076f9b88ac\",\"txid\":\"3fd5bf7e36499d4ec4a65e8274f92273165aa0cfeeef197a331b6bb15cc06fca\",\"txindex\":2,\"type\":\"p2pkh\",\"vsize\":148,\"segwit\":false},{\"amount\":1000,\"confirmations\":-1781069,\"script\":\"76a914a42a419377dcde836d1e9a4e42e3e595cd076f9b88ac\",\"txid\":\"a87aa337315d2208d3ca714ebd0c40d5e21ef4132a4c774c251eb34238a4831b\",\"txindex\":0,\"type\":\"p2pkh\",\"vsize\":148,\"segwit\":false},{\"amount\":149408,\"confirmations\":-1781069,\"script\":\"76a914a42a419377dcde836d1e9a4e42e3e595cd076f9b88ac\",\"txid\":\"ca35927ea1c7980d7ed3214e96a71e5fe3d762a67f68ef6a70db954ec20cafc3\",\"txindex\":1,\"type\":\"p2pkh\",\"vsize\":148,\"segwit\":false}],\"outputs\":[[\"mvUyjXK5HE6oMwqbKcBsXxFuqMyYdd3T6P\",10000],[\"mvUyjXK5HE6oMwqbKcBsXxFuqMyYdd3T6P\",940784]]}'"
+      ]
+     },
+     "execution_count": 271,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
    "source": [
-    "mvUyjXK5HE6oMwqbKcBsXxFuqMyYdd3T6P"
+    "create_tx(BTCTEST,BTCTEST_account,'mvUyjXK5HE6oMwqbKcBsXxFuqMyYdd3T6P',0.0001)"
    ]
   },
   {
    "cell_type": "code",
-   "execution_count": 60,
+   "execution_count": 272,
    "metadata": {},
    "outputs": [],
    "source": [
     "def send_tx(coin, account, to, amount):\n",
     "    if coin == ETH:\n",
-    "        raw_tx = create_tx(coin, account, to, amount)\n",
+    "        raw_tx = create_tx(coin, account.address, to, amount)\n",
     "        signed_tx = account.sign_transaction(raw_tx)\n",
     "        \n",
     "        return w3.eth.sendRawTransaction(signed_tx.rawTransaction).hex()\n",
@@ -225,17 +210,29 @@
     "        raw_tx = create_tx(coin, account, to, amount)\n",
     "        signed_tx = account.sign_transaction(raw_tx)\n",
     "        \n",
-    "        return NetworkAPI.broadcast_tx_testnet(signed)\n"
+    "        return NetworkAPI.broadcast_tx_testnet(signed_tx)\n"
    ]
   },
   {
    "cell_type": "code",
-   "execution_count": null,
-   "metadata": {
-    "jupyter": {
-     "source_hidden": true
-    }
-   },
+   "execution_count": 273,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "send_tx(BTCTEST,BTCTEST_account,'mvUyjXK5HE6oMwqbKcBsXxFuqMyYdd3T6P',0.0001)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 274,
+   "metadata": {},
    "outputs": [],
    "source": []
   }
