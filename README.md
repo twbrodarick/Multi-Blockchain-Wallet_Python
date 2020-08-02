@@ -29,3 +29,5 @@
 
 ### Note
 * Used Kovan network for this exercise, hence the chainID = 42 used in wallet.py
+* See Original Instructions in Images for directions on transacting on custom blockchain
+* Kovan network was used for simplicity because the first address pulled in derive_wallets function was already funded on Kovan network
