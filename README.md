@@ -11,9 +11,8 @@
 1. Create a Mnemonic and designate as an environment variable
 2. Derive the wallet keys
 
-## Python Shell Commands
-1. <python>
-2. <from wallet import *>
+## Python Shell Commands (after importing constants)
+
 **BTC-Test transaction** 
 - <BTCTEST_account = priv_key_to_account(BTCTEST, privkey_BTCTEST)>
 - <send_tx(BTCTEST,BTCTEST_account,'mvUyjXK5HE6oMwqbKcBsXxFuqMyYdd3T6P', 0.000001)>
