@@ -24,8 +24,8 @@
       *Account recipient and ETH amount are examples used for this exercise.*
       
 ## Output
-* BTC transactions do not output in terminal but can be run in python to find tx hash
+* BTC transactions do not output in terminal but can be run in python to find tx hashs to verify 
 * ETH tx will output in terminal
 
 ### Note
-* Used Kovan network for this exercise, hence the chainID =42
+* Used Kovan network for this exercise, hence the chainID = 42 used in wallet.py
